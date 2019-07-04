@@ -73,6 +73,9 @@
 (add-to-list 'default-frame-alist '(top . 30))
 (add-to-list 'default-frame-alist '(left . 400))
 
+;; Backup files
+(setq backup-directory-alist `(("." . "~/.saves")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Key bindings                                                             ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
