@@ -47,8 +47,7 @@
   :if (memq window-system '(mac ns))) ;; OSX specific settings
 (use-package arr-core) ;; Core functions and personal additions
 (use-package arr-editor) ;; General Emacs editing related config
-
-;; (use-package arr-programming) ;; Emacs general programming setup
+(use-package arr-programming) ;; Emacs general programming setup
 
 
 ;; Config changes made through the customize UI will be store here

@@ -109,7 +109,7 @@
   :config
   (ivy-mode 1)
   ;; Allow commands in minibuffers
-  (setq enable-recursive-minibuffers t) 
+  (setq enable-recursive-minibuffers t)
   ;; enable this if you want `swiper' to use it
   ;; (setq search-default-mode #'char-fold-to-regexp)
   (setq ivy-use-virtual-buffers t)
@@ -132,15 +132,15 @@
          ("<f2> i"  . counsel-info-lookup-symbol)
          ("<f2> u"  . counsel-unicode-char)
          ("C-c g"   . counsel-git)
-         ("C-c j"   . counsel-git-grep)
          ("C-c k"   . counsel-rg)
+         ("C-c i"   . counsel-imenu)
          ("C-x l"   . counsel-locate)
          ("M-y"     . counsel-yank-pop))
   :config
   (counsel-mode 1)
   (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history)
   (setq counsel-grep-base-command
-      "rg -i -M 120 --no-heading --line-number --color never '%s' %s"))
+        "rg -i -M 120 --no-heading --line-number --color never '%s' %s"))
 
 ;; Better M-x, enhanced by counsel
 (use-package smex
@@ -154,11 +154,15 @@
   :ensure t
   :after (ivy)
   :init
-  (setq ivy-rich-path-style 'abbrev
-        ivy-virtual-abbreviate 'full)
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+  ;; To abbreviate paths using abbreviate-file-name
+  (setq ivy-rich-path-style 'abbrev)
   :config
+  ;; Enable ivy-rich interface
+  (ivy-rich-mode 1)
 
-  ;; Icons for ivy-rich switch buffer
+  ;; Add icons for ivy-switch-buffer
+  ;; Defining a transformer
   (defun ivy-rich-switch-buffer-icon (candidate)
     (with-current-buffer
         (get-buffer candidate)
@@ -166,7 +170,7 @@
         (if (symbolp icon)
             (all-the-icons-icon-for-mode 'fundamental-mode)
           icon))))
-
+  ;; And adding it to ivy-rich--display-transformers-List
   (setq ivy-rich--display-transformers-list
         '(ivy-switch-buffer
           (:columns
@@ -178,14 +182,11 @@
             (ivy-rich-switch-buffer-project (:width 15 :face success))
             (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
            :predicate
-           (lambda (cand) (get-buffer cand)))))
-
-  ;; Enable
-  (ivy-rich-mode 1))
+           (lambda (cand) (get-buffer cand))))))
 
 (use-package projectile
   :ensure t
-  :diminish 
+  :diminish
   :commands (projectile-mode)
   :config
   (projectile-mode +1)
@@ -263,12 +264,14 @@
 (use-package flyspell
   :ensure t
   :commands (flyspell-mode flyspell-prog-mode)
-  :hook ((prog-mode . flyspell-prog-mode)
+  :hook ( ;; (prog-mode . flyspell-prog-mode)
          (text-mode . flyspell-mode))
   :init
   ;; Dictionary environment
   (setenv "DICTIONARY" "en_GB")
   :config
+  (setq flyspell-issue-message-flag nil)
+  (setq ispell-list-command "--list")
   (setq ispell-program-name "aspell"))
 
 
@@ -285,11 +288,15 @@
   :mode ("\\.json$")
   :config (setq js-indent-level 2))
 
-
 ;; Yaml
 (use-package yaml-mode
   :ensure t
   :mode ("\\.ya?ml$"))
+
+;; YASnippets
+(use-package yasnippet
+  :ensure t)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Theming                                                                  ;;

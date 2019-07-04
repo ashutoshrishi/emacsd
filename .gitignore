@@ -24,9 +24,10 @@ auto-save-list
 tramp
 .\#*
 *.eld
-smex-items/
-savefile/
-transient/
+smex-items
+savefile
+transient
+.lsp-session-*
 
 # Org-mode
 .org-id-locations
