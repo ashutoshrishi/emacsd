@@ -1,19 +1,12 @@
+;;; init.el --- My emacs configuration -*- no-byte-compile: t -*-
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Initial setup
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Commentary:
 
-;; Defining important directory names
-(defvar arr-root-dir (file-name-directory load-file-name)
-  "The root configuration directory.")
-(defvar arr-modules-dir (expand-file-name "modules" arr-root-dir)
-  "The core modules directory.")
-(defvar arr-vendor-dir (expand-file-name "vendor" arr-root-dir)
-  "External packages installed through the package manager.")
-(defvar arr-savefile-dir (expand-file-name "savefile" arr-root-dir)
-  "Auto saves and history files.")
-(defvar arr-themes-dir (expand-file-name "themes" arr-root-dir)
-  "For the themes!.")
+;;; Code:
+
+;; Add the special directories to the load paths
+(add-to-list 'load-path (expand-file-name "modules" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "vendor" user-emacs-directory))
 
 ;; Melpa package manager
 (require 'package)
@@ -25,38 +18,41 @@
                (cons "melpa" (concat proto "://melpa.org/packages/")) t))
 (package-initialize)
 
+(setq load-prefer-newer t)
+(package-initialize)
+(require 'auto-compile)
+(auto-compile-on-load-mode)
+(auto-compile-on-save-mode)
+
 ;; Main package management utility
 (require 'use-package)
 
 ;; Creating the savefile dir if it doesn't exist
-(unless (file-exists-p arr-savefile-dir)
-  (make-directory arr-savefile-dir))
-
-;; Add the special directories to the load paths
-(add-to-list 'load-path arr-vendor-dir)
-(add-to-list 'load-path arr-modules-dir)
-(add-to-list 'custom-theme-load-path arr-themes-dir)
-
-;; Byte compilation
-(setq load-prefer-newer t)
-(byte-recompile-directory arr-root-dir 0)
-
+(unless (file-exists-p "savefile") (make-directory "savefile"))
 
 ;; Loading user packages
-(use-package arr-macos
-  :if (memq window-system '(mac ns))) ;; OSX specific settings
-(use-package arr-core) ;; Core functions and personal additions
-(use-package arr-editor) ;; General Emacs editing related config
-(use-package arr-programming) ;; Emacs general programming setup
-
+;; OSX specific settings
+(use-package custom-macos
+  :if (memq window-system '(mac ns)))
+;; Core functions and personal additions
+(use-package custom-core)
+;; General Emacs editing related config
+(use-package custom-editor)
+;; Programming languages
+(use-package custom-haskell)
+(use-package custom-rust)
+(use-package custom-javascript)
 
 ;; Config changes made through the customize UI will be store here
-(setq custom-file (expand-file-name "custom.el" arr-root-dir))
-(load custom-file)
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(load custom-file 'noerror)
 
 ;; Start the emacs server
 (use-package server
   :config
-  (unless (server-running-p) (server-start)))
+  (if (and (fboundp 'server-running-p)
+         (not (server-running-p)))
+   (server-start)))
 
-;; Byte compilation setup
+(provide 'init)
+;;; init ends here

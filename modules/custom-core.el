@@ -1,9 +1,4 @@
-;;; arr-core.el --- Core functionality with useful functions
-;;
-;; Copyright (c) 2018 Ashutosh Rishi Ranjan
-;;
-;; Author: Ashutosh Rishi Ranjan <ashutoshrishi92@gmail.com
-;; Version: 2.0.0
+;;; custom-core.el --- Core functionality with useful functions
 
 ;;; Commentary:
 ;; Adapted from prelude
@@ -119,5 +114,5 @@ With a prefix ARG open line above the current line."
 (global-set-key (kbd "C-c s") 'prelude-swap-windows)
 (global-set-key (kbd "M-o") 'prelude-smart-open-line)
 
-(provide 'arr-core)
-;;; arr-core.el ends here
+(provide 'custom-core)
+;;; custom-core.el ends here

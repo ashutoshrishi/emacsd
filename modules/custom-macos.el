@@ -1,9 +1,4 @@
-;;; arr-macos.el --- MacOS Specific settings
-;;
-;; Copyright (c) 2018 Ashutosh Rishi Ranjan
-;;
-;; Author: Ashutosh Rishi Ranjan <ashutoshrishi92@gmail.com
-;; Version: 2.0.0
+;;; custom-macos.el --- MacOS Specific settings
 
 ;;; Commentary:
 ;; MacOS specific settings like switching to the real alt key
@@ -31,11 +26,10 @@
 (setq mac-option-modifier 'meta)
 (setq mac-command-modifier 'hyper)(setq ns-function-modifier 'hyper)
 
-
 (menu-bar-mode +1)
 
 ;; Use emacs terminfo and not system terminfo
 (setq system-uses-terminfo nil)
 
-(provide 'arr-macos)
-;;; arr-macos.el ends here
+(provide 'custom-macos)
+;;; custom-macos.el ends here

@@ -1,5 +1,11 @@
-;; Some nice defaults
+;;; custom-editor.el --- Setup for the editing part of Emacs
 
+;;; Commentary:
+;; Contains everything besides the language and programming specific settings.
+
+;;; Code:
+
+;; Some nice defaults
 (setq-default
  confirm-kill-emacs 'yes-or-no-p    ; Confirm before exiting Emacs
  delete-by-moving-to-trash t        ; Delete files to trash
@@ -15,13 +21,12 @@
  dired-dwim-target t                ; If there is a dired buffer displayed
                                         ; in the next window, use it's current
                                         ; subdir instead
- column-number-mode t)               ; column numbers
+ column-number-mode t) ; column numbers
 
 (delete-selection-mode 1)           ; Replace region when inserting text
 (fset 'yes-or-no-p 'y-or-n-p)       ; Replace yes/no prompts with y/n
 (global-subword-mode 1)             ; Iterate through CamelCase words
 (set-default-coding-systems 'utf-8) ; Default to utf-8 encoding
-
 
 ;; Nice scrolling and performance
 (setq scroll-margin 0
@@ -32,6 +37,8 @@
       gc-cons-threshold 50000000
       ;; warn when opening files bigger than 100MB
       large-file-warning-threshold 10000000
+      ;; Flymake
+      flymake-run-in-place nil
       )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -41,7 +48,7 @@
 ;; save recent files
 (use-package recentf
   :config
-  (setq recentf-save-file (expand-file-name "recentf" arr-savefile-dir)
+  (setq recentf-save-file (expand-file-name "recentf" "savefile")
         recentf-max-saved-items 30
         recentf-max-menu-items 15
         ;; disable recentf-cleanup on Emacs start, because it can cause
@@ -95,14 +102,32 @@
 ;; Whitespace mode quick interaction
 (global-set-key (kbd "C-c C-w") 'whitespace-cleanup)
 
+;; Align anything
+(global-set-key (kbd "M-[") 'align)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Editing and movement                                                     ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package projectile
+  :ensure t
+  :diminish
+  :commands (projectile-mode)
+  :config
+  (projectile-mode +1)
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+
+(use-package counsel-projectile
+  :ensure t
+  :diminish
+  :hook (after-init . counsel-projectile-mode))
 
 ;; Ivy
 (use-package ivy
   :ensure t
   :diminish
+  :after (projectile)
   :bind (("\C-s"    . swiper)
          ("C-c C-r" . ivy-resume)
          ("<f6>"    . ivy-resume)
@@ -120,6 +145,11 @@
   (setq ivy-height 20)
   (setq projectile-completion-system 'ivy)
   (setq magit-completing-read-function 'ivy-completing-read))
+
+(use-package ivy-rich
+  :ensure t
+  :after (ivy)
+  :config (ivy-rich-mode 1))
 
 ;; Faster searching
 (use-package counsel
@@ -153,54 +183,6 @@
 (use-package all-the-icons
   :ensure t)
 
-(use-package ivy-rich
-  :ensure t
-  :after (ivy)
-  :init
-  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
-  ;; To abbreviate paths using abbreviate-file-name
-  (setq ivy-rich-path-style 'abbrev)
-  :config
-  ;; Enable ivy-rich interface
-  (ivy-rich-mode 1)
-
-  ;; Add icons for ivy-switch-buffer
-  ;; Defining a transformer
-  (defun ivy-rich-switch-buffer-icon (candidate)
-    (with-current-buffer
-        (get-buffer candidate)
-      (let ((icon (all-the-icons-icon-for-mode major-mode)))
-        (if (symbolp icon)
-            (all-the-icons-icon-for-mode 'fundamental-mode)
-          icon))))
-  ;; And adding it to ivy-rich--display-transformers-List
-  (setq ivy-rich--display-transformers-list
-        '(ivy-switch-buffer
-          (:columns
-           ((ivy-rich-switch-buffer-icon :width 2)
-            (ivy-rich-candidate (:width 30))
-            (ivy-rich-switch-buffer-size (:width 7))
-            (ivy-rich-switch-buffer-indicators (:width 4 :face error :align right))
-            (ivy-rich-switch-buffer-major-mode (:width 12 :face warning))
-            (ivy-rich-switch-buffer-project (:width 15 :face success))
-            (ivy-rich-switch-buffer-path (:width (lambda (x) (ivy-rich-switch-buffer-shorten-path x (ivy-rich-minibuffer-width 0.3))))))
-           :predicate
-           (lambda (cand) (get-buffer cand))))))
-
-(use-package projectile
-  :ensure t
-  :diminish
-  :commands (projectile-mode)
-  :config
-  (projectile-mode +1)
-  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
-
-(use-package counsel-projectile
-  :ensure t
-  :diminish
-  :hook (after-init . counsel-projectile-mode))
-
 (use-package ace-jump-mode
   :ensure t
   :bind ("C-c j" . ace-jump-mode))
@@ -212,6 +194,33 @@
          ("C-<" . mc/mark-previous-like-this)
          ("C-c C-<" . mc/mark-all-like-this)))
 
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ("C-x t t"   . treemacs)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag)))
+
+(use-package treemacs-projectile
+  :after treemacs projectile
+  :ensure t)
+
+(use-package treemacs-icons-dired
+  :after treemacs dired
+  :ensure t
+  :config (treemacs-icons-dired-mode))
+
+(use-package treemacs-magit
+  :after treemacs magit
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Programming editor                                                       ;;
@@ -219,11 +228,17 @@
 
 (use-package magit
   :ensure t
+  :commands (magit-status)
   :bind ("C-x g" . magit-status))
 
 (use-package rainbow-delimiters
   :ensure t
+  :commands (rainbow-delimiters-mode)
   :hook (prog-mode . rainbow-delimiters-mode))
+
+(use-package show-paren-mode
+  :commands (show-paren-mode)
+  :hook (prog-mode . show-paren-mode))
 
 (use-package smartparens
   :ensure t
@@ -249,16 +264,44 @@
   :ensure t
   :diminish flycheck-mode
   :commands (flycheck-global-mode flycheck-mode)
-  :init (global-flycheck-mode)
-  :config
-  ;; Set flycheck to only bother on save.
-  (setq flycheck-check-syntax-automatically '(mode-enabled save)))
+  :init (global-flycheck-mode))
+
+;; Set flycheck to only bother on save.
+;; (setq flycheck-check-syntax-automatically '(save idle-change)))
 
 (use-package company
   :ensure t
   :diminish company
   :config
   (global-company-mode))
+
+;; LSP
+(use-package lsp-mode
+  :ensure t
+  :commands (lsp lsp-deferred)
+  :bind (("C-c C-f" . lsp-format-buffer))
+  :init
+  ;; Preferring flycheck over flymake
+  (setq lsp-prefer-flymake nil)
+  (add-to-list 'exec-path "~/.local/src/elixir-ls/release")
+  :hook ((elixir-mode     . lsp-deferred)
+         (rust-mode       . lsp-deferred)
+         (web-mode        . lsp-deferred)))
+
+(use-package lsp-ui
+  :ensure t
+  :after lsp-mode
+  :hook ((lsp-mode . lsp-ui-mode))
+  :commands lsp-ui-mode
+  :config
+  (setq lsp-ui-flycheck-live-reporting nil))
+
+(use-package company-lsp
+  :ensure t
+  :after lsp-mode
+  :commands company-lsp
+  :config
+  (push 'company-lsp company-backends))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Basic file modes                                                         ;;
@@ -281,10 +324,12 @@
 (use-package markdown-mode
   :ensure t
   :commands (markdown-mode gfm-mode)
+  :hook (markdown-mode . visual-line-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
-  :config (setq markdown-command "pandoc"))
+  :config
+  (setq markdown-command "pandoc"))
 
 (use-package json-mode
   :ensure t
@@ -300,20 +345,60 @@
 (use-package yasnippet
   :ensure t)
 
+;; Org mode
+(use-package ox-gfm
+  :defer 3
+  :after org)
+
+(use-package ox-md
+  :defer 3
+  :after org)
+
+(use-package org
+  :ensure t
+  :commands (org-mode org-agenda)
+  :bind (("\C-ca" . org-agenda))
+  :hook ((org-mode . visual-line-mode)
+         (org-mode . visual-fill-column-mode))
+  :init
+  (setq org-agenda-files (list "~/plans/me.org" "~/plans/cadmus.org")))
+
+
+(use-package org-present
+  :ensure t
+  :commands (org-present)
+  :init
+  (eval-after-load "org-present"
+    '(progn
+       (add-hook 'org-present-mode-hook
+                 (lambda ()
+                   (org-present-big)
+                   (org-display-inline-images)
+                   (org-present-hide-cursor)
+                   (org-present-read-only)))
+       (add-hook 'org-present-mode-quit-hook
+                 (lambda ()
+                   (org-present-small)
+                   (org-remove-inline-images)
+                   (org-present-show-cursor)
+                   (org-present-read-write))))))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Theming                                                                  ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package doom-themes
+(use-package material-theme
   :ensure t
   :init
-  ;; Global settings (defaults)
-  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-        doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  :config
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config))
+  (load-theme 'material t))
 
-(provide 'arr-editor)
-;;; arr-editor.el ends here
+;; natural-title-bar option was removed from this formula
+;; duplicate its effect:
+(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(ns-appearance . dark))
+;; (add-to-list 'default-frame-alist '(ns-appearance . light))
+
+(provide 'custom-editor)
+;;; custom-editor.el ends here
